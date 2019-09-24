@@ -1,0 +1,105 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "com.jackstraw.market"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(MYAPP_RELEASE_STORE_FILE)
+            storePassword MYAPP_RELEASE_STORE_PASSWORD
+            keyAlias MYAPP_RELEASE_KEY_ALIAS
+            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+        }
+        debug {
+            storeFile file(MYAPP_RELEASE_STORE_FILE)
+            storePassword MYAPP_RELEASE_STORE_PASSWORD
+            keyAlias MYAPP_RELEASE_KEY_ALIAS
+            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+        }
+    }
+
+    buildTypes {
+        release {
+            //是否启用混淆
+            minifyEnabled false
+            //是否清理无用资源
+            shrinkResources false
+            //是否启用zipAlign压缩
+            zipAlignEnabled false
+            //签名
+            signingConfig signingConfigs.release
+            //打印log
+            buildConfigField "boolean", "LOG_DEBUG", "false"
+        }
+
+        debug {
+            //是否启用混淆
+            minifyEnabled false
+            //是否清理无用资源
+            shrinkResources false
+            //是否启用zipAlign压缩
+            zipAlignEnabled false
+            //签名
+            signingConfig signingConfigs.debug
+            //打印log
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {output ->
+            if (!variant.buildType.isDebuggable()) {
+                def releaseDir = "/publish/${defaultConfig.versionName}"
+                outputFileName = "../../../../"+releaseDir + "/" + releaseFileName()
+            }else{
+                outputFileName = debugFileName()
+            }
+        }
+    }
+}
+
+
+// 显示的时间格式，形如20171110
+def releaseTime() {
+    return new Date().format("yyyyMMddHHmmss", TimeZone.getDefault())
+}
+
+// 显示正式包打包文件名
+def releaseFileName() {
+    // 显示app名称+当前版本号
+    def fileName = "appStore_android_V${rootProject.ext.versionName}_${rootProject.ext.versionCode}"
+    // 加入打包时间
+    fileName = fileName + "_${releaseTime()}"
+    //拼接正式包后缀
+    fileName = fileName + "-release.apk"
+    //
+    return fileName
+}
+
+// 显示测试包打包文件名
+def debugFileName() {
+    // 当前beta版本号
+    def build_number = "beta-${rootProject.ext.versionCode}"
+    def fileName = "app-debug"+ "-${build_number}.apk"
+    return fileName
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    testImplementation 'junit:junit:4.12'
+}
